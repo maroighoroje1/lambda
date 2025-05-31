@@ -11,16 +11,16 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     env:
-      AWS_REGION: eu-west-1 # <<< IMPORTANT: Set your AWS Region here
+      AWS_REGION: us-east-1 # <<< IMPORTANT: Set your AWS Region here to US East (N. Virginia)
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js (for Serverless CLI)
-        uses: actions/setup-node@v4
+      - name: Set up Python # CHANGED: From Node.js to Python
+        uses: actions/setup-python@v5 # CHANGED: Action for Python
         with:
-          node-version: '20' # Use a recent Node.js version for Serverless CLI
+          python-version: '3.9' # CHANGED: Specify your Python runtime version
 
       - name: Install Serverless Framework CLI
         run: npm install -g serverless
@@ -32,13 +32,13 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Install Lambda dependencies (if applicable)
+      - name: Install Lambda dependencies
         run: |
           # For Python: install requirements (serverless-python-requirements plugin handles packaging)
-          # pip install -r requirements.txt # Only needed if not using serverless-python-requirements
+          pip install -r requirements.txt # UNCOMMENTED for Python
           # For Node.js: install node modules
-          npm install # if your lambda code has its own package.json in the root of the project
-        working-directory: my-bill-payment-app # Or the directory where your handler.py/js and requirements/package.json are
+          # npm install # COMMENTED OUT for Python
+        working-directory: my-serverless_deployment # UPDATED: Use your actual project folder name
 
       - name: Serverless Deploy to Development Environment
         if: github.ref == 'refs/heads/develop' # Only run for 'develop' branch
