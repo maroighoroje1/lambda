@@ -11,16 +11,16 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     env:
-      AWS_REGION: us-east-1 # <<< IMPORTANT: Set your AWS Region here to US East (N. Virginia)
+      AWS_REGION: us-east-1 # Set your AWS Region (e.g., us-east-1, eu-west-1)
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v5 # Action to set up Python
         with:
-          python-version: '3.9' # Specify your Python runtime version
+          python-version: '3.9' # Specify your Python runtime version, e.g., '3.9', '3.10', '3.11', '3.12'
 
       - name: Install Serverless Framework CLI
         run: npm install -g serverless
@@ -34,23 +34,22 @@ jobs:
 
       - name: Install Lambda dependencies
         run: |
-          pip install -r requirements.txt
-        # REMOVE THIS LINE: working-directory: my-serverless_deployment
-        # OR Change it to:
-        # working-directory: . # Explicitly set to repository root (optional, as it's the default)
+          pip install -r requirements.txt # Install Python dependencies from requirements.txt
+        # 'working-directory: .' is implicitly the default, as your files are at the repo root.
+        # So, no 'working-directory' line is needed here.
 
       - name: Serverless Deploy to Development Environment
-        if: github.ref == 'refs/heads/develop'
+        if: github.ref == 'refs/heads/develop' # Only runs for pushes to the 'develop' branch
+        env:
+          SLS_ORG_TOKEN: ${{ secrets.SERVERLESS_ACCESS_KEY }} # Required for Serverless Framework V4 authentication
         run: |
-          serverless deploy --stage dev --verbose
-        # REMOVE THIS LINE: working-directory: my-serverless_deployment
-        # OR Change it to:
-        # working-directory: .
+          serverless deploy --stage dev --verbose # Deploy to 'dev' stage
+        # No 'working-directory' needed as project files are at repo root.
 
       - name: Serverless Deploy to Production Environment
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' # Only runs for pushes to the 'main' branch
+        env:
+          SLS_ORG_TOKEN: ${{ secrets.SERVERLESS_ACCESS_KEY }} # Required for Serverless Framework V4 authentication
         run: |
-          serverless deploy --stage prod --verbose
-        # REMOVE THIS LINE: working-directory: my-serverless_deployment
-        # OR Change it to:
-        # working-directory: .
+          serverless deploy --stage prod --verbose # Deploy to 'prod' stage
+        # No 'working-directory' needed as project files are at repo root.
