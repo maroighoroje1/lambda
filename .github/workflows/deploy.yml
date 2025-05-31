@@ -35,16 +35,22 @@ jobs:
       - name: Install Lambda dependencies
         run: |
           pip install -r requirements.txt
-        working-directory: my-serverless_deployment # CORRECTED: Point to your project subfolder
+        # REMOVE THIS LINE: working-directory: my-serverless_deployment
+        # OR Change it to:
+        # working-directory: . # Explicitly set to repository root (optional, as it's the default)
 
       - name: Serverless Deploy to Development Environment
         if: github.ref == 'refs/heads/develop'
         run: |
           serverless deploy --stage dev --verbose
-        working-directory: my-serverless_deployment # ADDED: Apply working-directory to deploy step too
+        # REMOVE THIS LINE: working-directory: my-serverless_deployment
+        # OR Change it to:
+        # working-directory: .
 
       - name: Serverless Deploy to Production Environment
         if: github.ref == 'refs/heads/main'
         run: |
           serverless deploy --stage prod --verbose
-        working-directory: my-serverless_deployment # ADDED: Apply working-directory to deploy step too
+        # REMOVE THIS LINE: working-directory: my-serverless_deployment
+        # OR Change it to:
+        # working-directory: .
