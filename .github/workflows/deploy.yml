@@ -4,26 +4,31 @@ name: Deploy Serverless App
 on:
   push:
     branches:
-      - main # Triggers on push to main branch (for prod deployment)
-      - develop # Triggers on push to develop branch (for dev deployment)
+      - main
+      - develop
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     env:
-      AWS_REGION: us-east-1 # Set your AWS Region (e.g., us-east-1, eu-west-1)
+      AWS_REGION: us-east-1
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v5 # Action to set up Python
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.9' # Specify your Python runtime version, e.g., '3.9', '3.10', '3.11', '3.12'
+          python-version: '3.9'
 
       - name: Install Serverless Framework CLI
         run: npm install -g serverless
+
+      # --- ADD THIS NEW STEP HERE ---
+      - name: Install Serverless Python Requirements Plugin
+        run: npm install --save-dev serverless-python-requirements
+      # ----------------------------
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -34,23 +39,18 @@ jobs:
 
       - name: Install Lambda dependencies
         run: |
-          pip install -r requirements.txt # Install Python dependencies from requirements.txt
-        # 'working-directory: .' is implicitly the default, as your files are at the repo root.
+          pip install -r requirements.txt
 
       - name: Serverless Deploy to Development Environment
-        if: github.ref == 'refs/heads/develop' # Only runs for pushes to the 'develop' branch
+        if: github.ref == 'refs/heads/develop'
         env:
-          # --- IMPORTANT CHANGE HERE ---
-          # Using SERVERLESS_LICENSE_KEY as suggested by your Serverless.com dashboard
           SERVERLESS_LICENSE_KEY: ${{ secrets.SERVERLESS_LICENSE_KEY }}
         run: |
-          serverless deploy --stage dev --verbose # Deploy to 'dev' stage
+          serverless deploy --stage dev --verbose
 
       - name: Serverless Deploy to Production Environment
-        if: github.ref == 'refs/heads/main' # Only runs for pushes to the 'main' branch
+        if: github.ref == 'refs/heads/main'
         env:
-          # --- IMPORTANT CHANGE HERE ---
-          # Using SERVERLESS_LICENSE_KEY as suggested by your Serverless.com dashboard
           SERVERLESS_LICENSE_KEY: ${{ secrets.SERVERLESS_LICENSE_KEY }}
         run: |
           serverless deploy --stage prod --verbose
