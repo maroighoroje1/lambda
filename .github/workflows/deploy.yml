@@ -36,20 +36,21 @@ jobs:
         run: |
           pip install -r requirements.txt # Install Python dependencies from requirements.txt
         # 'working-directory: .' is implicitly the default, as your files are at the repo root.
-        # So, no 'working-directory' line is needed here.
 
       - name: Serverless Deploy to Development Environment
         if: github.ref == 'refs/heads/develop' # Only runs for pushes to the 'develop' branch
         env:
-          SLS_ORG_TOKEN: ${{ secrets.SERVERLESS_ACCESS_KEY }} # Required for Serverless Framework V4 authentication
+          # --- IMPORTANT CHANGE HERE ---
+          # Using SERVERLESS_LICENSE_KEY as suggested by your Serverless.com dashboard
+          SERVERLESS_LICENSE_KEY: ${{ secrets.SERVERLESS_LICENSE_KEY }}
         run: |
           serverless deploy --stage dev --verbose # Deploy to 'dev' stage
-        # No 'working-directory' needed as project files are at repo root.
 
       - name: Serverless Deploy to Production Environment
         if: github.ref == 'refs/heads/main' # Only runs for pushes to the 'main' branch
         env:
-          SLS_ORG_TOKEN: ${{ secrets.SERVERLESS_ACCESS_KEY }} # Required for Serverless Framework V4 authentication
+          # --- IMPORTANT CHANGE HERE ---
+          # Using SERVERLESS_LICENSE_KEY as suggested by your Serverless.com dashboard
+          SERVERLESS_LICENSE_KEY: ${{ secrets.SERVERLESS_LICENSE_KEY }}
         run: |
-          serverless deploy --stage prod --verbose # Deploy to 'prod' stage
-        # No 'working-directory' needed as project files are at repo root.
+          serverless deploy --stage prod --verbose
