@@ -27,7 +27,7 @@ provider:
             - secretsmanager:GetSecretValue
           Resource: 'arn:aws:secretsmanager:${aws:region}:${aws:accountId}:secret:dev_transactions_secret-*'
         
-        # If your KMS key for the secret is not the default 'aws/secretsmanager',
+        # If your KMS key for the secret isn't the default 'aws/secretsmanager',
         # you might also need kms:Decrypt permissions. Uncomment and specify ARN if necessary.
         # - Effect: Allow
         #   Action:
@@ -46,32 +46,31 @@ functions:
     name: power-transactions
     handler: lambda_function.lambda_handler
     
-    # Define events that trigger this Lambda function (e.g., schedules, HTTP API, SQS, etc.)
     events:
-      # --- ENABLED SCHEDULED EVENTS ---
+      # --- ENABLED SCHEDULED EVENTS (ALL UTC) ---
       - schedule:
-          rate: cron(0 0 * * ? *) # This runs at 12:00 AM UTC (midnight)
+          rate: cron(0 0 * * ? *) # Runs at 12:00 AM UTC (midnight)
           enabled: true
           input:
-            summary_type: "midnight_summary" # You can customize this input type
+            summary_type: "midnight_summary" 
       - schedule:
-          rate: cron(0 5 * * ? *) # This runs at 5:00 AM UTC
+          rate: cron(0 6 * * ? *) # Runs at 6:00 AM UTC
           enabled: true
           input:
-            summary_type: "daily_6am_wat"
+            summary_type: "morning_summary" # Changed input type for clarity
       - schedule:
-          rate: cron(0 11 * * ? *) # This runs at 11:00 AM UTC
+          rate: cron(0 12 * * ? *) # Runs at 12:00 PM UTC (noon)
           enabled: true
           input:
-            summary_type: "midday_12pm_wat"
+            summary_type: "midday_summary" # Changed input type for clarity
       - schedule:
-          rate: cron(0 17 * * ? *) # This runs at 5:00 PM UTC
+          rate: cron(0 18 * * ? *) # Runs at 6:00 PM UTC
           enabled: true
           input:
-            summary_type: "evening_6pm_wat"
+            summary_type: "evening_summary" # Changed input type for clarity
       # --- END ENABLED SCHEDULED EVENTS ---
       
-      # If you have an HTTP API endpoint, keep it here uncommented:
+      # Keep HTTP API endpoint commented unless you need it:
       # - httpApi:
       #     path: /transactions/summary
       #     method: GET
