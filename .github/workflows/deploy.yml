@@ -1,0 +1,51 @@
+# .github/workflows/deploy.yml
+name: Deploy Serverless App
+
+on:
+  push:
+    branches:
+      - main # Triggers on push to main branch (for prod deployment)
+      - develop # Triggers on push to develop branch (for dev deployment)
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: eu-west-1 # <<< IMPORTANT: Set your AWS Region here
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js (for Serverless CLI)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Use a recent Node.js version for Serverless CLI
+
+      - name: Install Serverless Framework CLI
+        run: npm install -g serverless
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install Lambda dependencies (if applicable)
+        run: |
+          # For Python: install requirements (serverless-python-requirements plugin handles packaging)
+          # pip install -r requirements.txt # Only needed if not using serverless-python-requirements
+          # For Node.js: install node modules
+          npm install # if your lambda code has its own package.json in the root of the project
+        working-directory: my-bill-payment-app # Or the directory where your handler.py/js and requirements/package.json are
+
+      - name: Serverless Deploy to Development Environment
+        if: github.ref == 'refs/heads/develop' # Only run for 'develop' branch
+        run: |
+          serverless deploy --stage dev --verbose # --verbose for more detailed output
+
+      - name: Serverless Deploy to Production Environment
+        if: github.ref == 'refs/heads/main' # Only run for 'main' branch
+        run: |
+          serverless deploy --stage prod --verbose # --verbose for more detailed output
