@@ -1,35 +1,84 @@
-# serverless.yml (excerpt)
+# serverless.yml
+
+# 1. The 'service' property is essential and must be at the very top.
+#    This defines your service name and forms the base of your CloudFormation stack name (e.g., power-transactions-prod)
+service: power-transactions
+
+# 2. Recommended to specify frameworkVersion for consistent behavior
+frameworkVersion: "4"
 
 provider:
   name: aws
-  runtime: python3.10
-  region: us-east-1
-  stage: ${opt:stage, 'dev'}
-  # ... other provider settings ...
+  runtime: python3.10 # Ensure this matches your Lambda code's Python version
+  region: us-east-1   # Your AWS region
+  stage: ${opt:stage, 'dev'} # Allows deploying to different stages (dev, prod)
+  timeout: 30 # Default timeout for functions (adjust if needed)
+  memorySize: 128 # Default memory for functions (adjust if needed)
+  
+  # IAM role for your Lambda functions
   iam:
     role:
       statements:
-        # Standard logging permissions (keep these)
+        # Permissions for Lambda to write logs to CloudWatch
         - Effect: Allow
           Action:
             - logs:CreateLogGroup
             - logs:CreateLogStream
             - logs:PutLogEvents
           Resource: 'arn:aws:logs:${aws:region}:${aws:accountId}:log-group:/aws/lambda/*:*:*'
-        # --- ADD/UPDATE THIS SECTION FOR SECRETS MANAGER PERMISSIONS ---
+        
+        # Permissions to retrieve secrets from AWS Secrets Manager
         - Effect: Allow
           Action:
             - secretsmanager:GetSecretValue
-          # This resource ARN specifically allows access to your secret.
-          # The `*-` at the end is a common pattern to match different versions of the secret.
+          # Resource ARN for your specific secret. The `*-` matches secret versions.
           Resource: 'arn:aws:secretsmanager:${aws:region}:${aws:accountId}:secret:dev_transactions_secret-*'
-        # ----------------------------------------------------------------
-        # Add kms:Decrypt if you are using a custom KMS key for the secret
-        # (if you used the default `aws/secretsmanager` key, it's usually not needed explicitly here)
+        
+        # If your KMS key for the secret is not the default 'aws/secretsmanager',
+        # you might also need kms:Decrypt permissions. Uncomment and specify ARN if necessary.
         # - Effect: Allow
         #   Action:
         #     - kms:Decrypt
-        #   Resource: '*' # Be specific if you use a custom KMS key ARN
+        #   Resource: 'arn:aws:kms:${aws:region}:${aws:accountId}:key/<your-kms-key-id>'
+
+plugins:
+  # This plugin helps manage Python dependencies (from requirements.txt)
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: true # Recommended for complex dependencies or local OS mismatch
 
 functions:
-  # ... your functions ...
+  # 'main' is the internal identifier for this specific Lambda function within Serverless Framework.
+  main:
+    # This 'name' property explicitly sets the actual AWS Lambda function name to "power-transactions".
+    # This is why it remains consistent across stages (e.g., prod, dev will both target "power-transactions").
+    name: power-transactions
+    
+    # Path to your Lambda handler function (e.g., 'lambda_function.py' and the 'lambda_handler' function inside it)
+    handler: lambda_function.lambda_handler # Ensure this matches your actual Python file and function name
+    
+    # Define events that trigger this Lambda function (e.g., schedules, HTTP API, SQS, etc.)
+    events:
+      # Example scheduled events (based on your previous setup):
+      # - schedule:
+      #     rate: cron(0 5 * * ? *) # 5 AM UTC
+      #     enabled: true
+      #     input:
+      #       summary_type: "daily_6am_wat"
+      # - schedule:
+      #     rate: cron(0 11 * * ? *) # 11 AM UTC
+      #     enabled: true
+      #     input:
+      #       summary_type: "midday_12pm_wat"
+      # - schedule:
+      #     rate: cron(0 17 * * ? *) # 5 PM UTC
+      #     enabled: true
+      #     input:
+      #       summary_type: "evening_6pm_wat"
+      
+      # If you have an HTTP API endpoint:
+      # - httpApi:
+      #     path: /transactions/summary
+      #     method: GET
