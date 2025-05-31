@@ -1,60 +1,38 @@
 # serverless.yml
-service: dev-transactions # UPDATED service name
+service: lambda-api # Or whatever your service name is
+
+frameworkVersion: "4" # Ensure this is present for Serverless Framework v4
 
 provider:
   name: aws
-  runtime: python3.9 # Or your desired Python version, e.g., python3.12
-  region: us-east-1 # Updated to US East (N. Virginia)
-  stage: ${opt:stage, 'dev'} # Allows deploying to different stages (dev, prod)
-  memorySize: 128
-  timeout: 30 # Adjust if your DB queries take longer
-  environment:
-    # These environment variables tell the Lambda where to find the secrets in Parameter Store
-    MONGODB_URI_PARAM_NAME: /dev-transactions/${self:provider.stage}/db/connection_string # UPDATED: Uncommented and path matches service name
-    SLACK_WEBHOOK_PARAM_NAME: /dev-transactions/${self:provider.stage}/slack_webhook_url # UPDATED: Uncommented and path matches service name
-    LOG_LEVEL: INFO
-    TIMEZONE: Africa/Lagos # Example for local time handling within Lambda
-  iam: # IAM permissions for all functions in this service
-    role:
-      statements:
-        - Effect: Allow
-          Action:
-            - logs:CreateLogGroup
-            - logs:CreateLogStream
-            - logs:PutLogEvents
-          Resource: 'arn:aws:logs:${aws:region}:${aws:accountId}:log-group:/aws/lambda/*:*:*'
-        # UPDATED: Parameter Store policy added here
-        - Effect: Allow
-          Action:
-            - ssm:GetParameter
-            - ssm:GetParameters # If you fetch multiple at once
-          # Resource path matches your Parameter Store naming convention for dev/prod
-          Resource: 'arn:aws:ssm:${aws:region}:${aws:accountId}:parameter/dev-transactions/${self:provider.stage}/*'
-        - Effect: Allow # Required if using SecureString (which you should be!) with default KMS key
-          Action:
-            - kms:Decrypt
-          # Note: If you use a custom KMS key, replace '*' with your specific KMS key ARN
-          Resource: '*' 
-
-functions:
-  billPaymentSummaryLambda:
-    handler: handler.lambda_handler # This expects a file named handler.py with a function named lambda_handler
-    events:
-      - schedule:
-          rate: cron(0 5 * * ? *) # 5 AM UTC for 6 AM WAT (UTC+1)
-          enabled: true
-          input:
-            summary_type: "daily_6am_wat" # Optional input for the lambda
-      - schedule:
-          rate: cron(0 11 * * ? *) # 11 AM UTC for 12 PM WAT
-          enabled: true
-          input:
-            summary_type: "midday_12pm_wat"
-      - schedule:
-          rate: cron(0 17 * * ? *) # 5 PM UTC for 6 PM WAT
-          enabled: true
-          input:
-            summary_type: "evening_6pm_wat"
+  runtime: python3.9
+  region: us-east-1 # Ensure this matches your AWS_REGION
+  stage: ${opt:stage, 'dev'}
+  # ... other provider settings like environment variables, IAM roles etc.
 
 plugins:
-  - serverless-python-requirements # Required for Python dependencies (install via `npm` later)
+  - serverless-python-requirements # ADD THIS LINE IF NOT PRESENT
+
+custom:
+  pythonRequirements:
+    dockerizePip: true # Recommended for complex dependencies or non-Linux local dev
+    # Add other configurations as needed, e.g.:
+    # slim: true
+    # noDeploy:
+    #   - docutils
+    #   - pylint
+    #   - boto3
+    #   - botocore
+    #   - jmespath
+    #   - s3transfer
+
+functions:
+  hello:
+    handler: handler.hello # Assuming your handler is in handler.py
+    # ... other function settings
+    events:
+      - httpApi:
+          path: /hello
+          method: GET
+
+# You might have other resources or configurations here
