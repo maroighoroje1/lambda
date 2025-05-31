@@ -17,10 +17,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python # CHANGED: From Node.js to Python
-        uses: actions/setup-python@v5 # CHANGED: Action for Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.9' # CHANGED: Specify your Python runtime version
+          python-version: '3.9' # Specify your Python runtime version
 
       - name: Install Serverless Framework CLI
         run: npm install -g serverless
@@ -34,18 +34,17 @@ jobs:
 
       - name: Install Lambda dependencies
         run: |
-          # For Python: install requirements (serverless-python-requirements plugin handles packaging)
-          pip install -r requirements.txt # UNCOMMENTED for Python
-          # For Node.js: install node modules
-          # npm install # COMMENTED OUT for Python
-        working-directory: my-serverless_deployment # UPDATED: Use your actual project folder name
+          pip install -r requirements.txt
+        # REMOVED: working-directory: my-serverless_deployment
+        # Or, set it to the current directory explicitly:
+        # working-directory: . 
 
       - name: Serverless Deploy to Development Environment
-        if: github.ref == 'refs/heads/develop' # Only run for 'develop' branch
+        if: github.ref == 'refs/heads/develop'
         run: |
-          serverless deploy --stage dev --verbose # --verbose for more detailed output
+          serverless deploy --stage dev --verbose
 
       - name: Serverless Deploy to Production Environment
-        if: github.ref == 'refs/heads/main' # Only run for 'main' branch
+        if: github.ref == 'refs/heads/main'
         run: |
-          serverless deploy --stage prod --verbose # --verbose for more detailed output
+          serverless deploy --stage prod --verbose
