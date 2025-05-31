@@ -1,39 +1,35 @@
-# serverless.yml
-# The 'service' name must use hyphens, not underscores, for CloudFormation compatibility.
-# This will form the base of your CloudFormation stack name (e.g., power-transactions-prod)
-service: power-transactions # <--- MODIFIED: Changed service name to use hyphens
-
-frameworkVersion: "4"
+# serverless.yml (excerpt)
 
 provider:
   name: aws
-  runtime: python3.10 # Keeping Python 3.10 as per your previous function
+  runtime: python3.10
   region: us-east-1
   stage: ${opt:stage, 'dev'}
-  # ... other provider settings like environment variables, IAM roles etc.
-
-plugins:
-  - serverless-python-requirements # Ensure this is still listed
-
-custom:
-  pythonRequirements:
-    dockerizePip: true
-    # Add other configurations as needed
+  # ... other provider settings ...
+  iam:
+    role:
+      statements:
+        # Standard logging permissions (keep these)
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource: 'arn:aws:logs:${aws:region}:${aws:accountId}:log-group:/aws/lambda/*:*:*'
+        # --- ADD/UPDATE THIS SECTION FOR SECRETS MANAGER PERMISSIONS ---
+        - Effect: Allow
+          Action:
+            - secretsmanager:GetSecretValue
+          # This resource ARN specifically allows access to your secret.
+          # The `*-` at the end is a common pattern to match different versions of the secret.
+          Resource: 'arn:aws:secretsmanager:${aws:region}:${aws:accountId}:secret:dev_transactions_secret-*'
+        # ----------------------------------------------------------------
+        # Add kms:Decrypt if you are using a custom KMS key for the secret
+        # (if you used the default `aws/secretsmanager` key, it's usually not needed explicitly here)
+        # - Effect: Allow
+        #   Action:
+        #     - kms:Decrypt
+        #   Resource: '*' # Be specific if you use a custom KMS key ARN
 
 functions:
-  # 'main' is the internal function key for this function definition.
-  # The 'name' property below will override the default AWS Lambda function name.
-  main:
-    name: power-transactions # <--- CRITICAL CHANGE: Explicitly sets the deployed AWS Lambda function name
-    handler: lambda_function.lambda_handler # <--- Keeping your handler path
-    events:
-      # If your 'power-transactions' function uses API Gateway, define its events here.
-      # Example:
-      # - httpApi:
-      #     path: /api/power
-      #     method: ANY
-      # - httpApi:
-      #     path: /api/power/{proxy+}
-      #     method: ANY
-
-# You might have other resources or configurations here
+  # ... your functions ...
