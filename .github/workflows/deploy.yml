@@ -35,9 +35,9 @@ jobs:
       - name: Install Lambda dependencies
         run: |
           pip install -r requirements.txt
-        # REMOVED: working-directory: my-serverless_deployment
-        # Or, set it to the current directory explicitly:
-        # working-directory: . 
+        working-directory: . # IMPORTANT: Set to '.' (current directory, which is repo root)
+        # Or, you can simply remove the 'working-directory' line entirely,
+        # as '.' is the default.
 
       - name: Serverless Deploy to Development Environment
         if: github.ref == 'refs/heads/develop'
