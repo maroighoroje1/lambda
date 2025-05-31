@@ -1,12 +1,14 @@
 # serverless.yml
-service: dev_transactions # You can set your service name here. Using 'dev_transactions' for clarity.
+# The 'service' name must use hyphens, not underscores, for CloudFormation compatibility.
+# This will form the base of your CloudFormation stack name (e.g., power-transactions-prod)
+service: power-transactions # <--- MODIFIED: Changed service name to use hyphens
 
-frameworkVersion: "4" # Ensure this is present for Serverless Framework v4
+frameworkVersion: "4"
 
 provider:
   name: aws
-  runtime: python3.10 # <--- MODIFIED: Set runtime to Python 3.10 as per your screenshot
-  region: us-east-1 # Ensure this matches your AWS_REGION
+  runtime: python3.10 # Keeping Python 3.10 as per your previous function
+  region: us-east-1
   stage: ${opt:stage, 'dev'}
   # ... other provider settings like environment variables, IAM roles etc.
 
@@ -19,18 +21,19 @@ custom:
     # Add other configurations as needed
 
 functions:
-  # Define your function here. The key 'yourFunctionName' is an internal reference.
-  main: # <--- You can name this function key anything, e.g., 'main' or 'myHandler'
-    name: dev_transactions # <--- CRITICAL CHANGE: Explicitly sets the deployed AWS Lambda function name to 'dev_transactions'
-    handler: lambda_function.lambda_handler # <--- MODIFIED: Set handler as per your screenshot
+  # 'main' is the internal function key for this function definition.
+  # The 'name' property below will override the default AWS Lambda function name.
+  main:
+    name: power-transactions # <--- CRITICAL CHANGE: Explicitly sets the deployed AWS Lambda function name
+    handler: lambda_function.lambda_handler # <--- Keeping your handler path
     events:
-      # If your 'dev_transactions' function uses API Gateway, define its events here.
-      # Example (adjust path as needed):
+      # If your 'power-transactions' function uses API Gateway, define its events here.
+      # Example:
       # - httpApi:
-      #     path: /api/transactions
+      #     path: /api/power
       #     method: ANY
       # - httpApi:
-      #     path: /api/transactions/{proxy+}
+      #     path: /api/power/{proxy+}
       #     method: ANY
 
 # You might have other resources or configurations here
